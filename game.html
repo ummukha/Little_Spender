@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Little Spender - Game</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            user-select: none;
+        }
+        body {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            transition: background-image 0.2s ease;
+        }
+        .game-container {
+            width: 100%;
+            max-width: 900px;
+            height: 100vh;
+            max-height: 800px;
+            position: relative;
+            padding: 20px;
+            background: transparent;
+            overflow: auto;
+        }
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            gap: 15px;
+            overflow-y: auto;
+        }
+        .screen.active {
+            display: flex;
+        }
+        /* Menu utama transparan */
+        #menuScreen {
+            background: transparent;
+        }
+        /* Layar belanja dengan latar krem + border */
+        #belanjaScreen {
+            background-color: #f3e1c2;
+            border-radius: 60px;
+            border: 6px solid #a56b3c;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.6), inset 0 0 15px #ffeeaa;
+        }
+        /* Layar Grinder: transparan, tanpa kotak putih */
+        #grinderScreen {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            padding: 0;
+            position: relative;
+        }
+        /* Tombol pemain baru di pojok kanan atas */
+        .new-player-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            border: 2px solid #ffd966;
+            color: #ffd966;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        .new-player-btn:hover {
+            background: rgba(0,0,0,0.8);
+            transform: scale(1.05);
+        }
+        /* Pesan selamat datang */
+        .welcome-message {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffd966;
+            text-shadow: 3px 3px 0 #9b6226;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        /* Kartu menu dengan latar putih solid */
+        .menu-card {
+            width: 80%;
+            max-width: 400px;
+            background: #ffffff;
+            border: 4px solid #a56b3c;
+            border-radius: 60px;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            margin: 15px 0;
+        }
+        .menu-card:hover {
+            transform: scale(1.02);
+            background: #fff8e7;
+            border-color: #c47a44;
+        }
+        .menu-card:active {
+            transform: scale(0.98);
+        }
+        .menu-icon-img {
+            width: 60px;
+            height: auto;
+            display: block;
+            animation: bounce 1s infinite ease-in-out;
+            object-fit: contain;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .menu-text {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3b2a17;
+            text-shadow: 1px 1px 0 #ebc47f;
+        }
+        /* Panel pilihan level dengan latar putih */
+        #levelChoice {
+            background: #ffffff;
+            border: 4px solid #a56b3c;
+            border-radius: 60px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        h1, h2, h3 {
+            color: #3b2a17;
+            text-shadow: 2px 2px 0 #ebc47f;
+        }
+        .btn-custom {
+            background: #fdd28c;
+            border: 4px solid #9b6226;
+            border-radius: 50px;
+            color: #2d1f0f;
+            font-weight: bold;
+            font-size: 1.3rem;
+            padding: 12px 30px;
+            box-shadow: 0 6px 0 #7b4d27, 0 10px 15px rgba(0,0,0,0.3);
+            transition: 0.05s linear;
+            margin: 5px;
+        }
+        .btn-custom:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #7b4d27, 0 5px 10px rgba(0,0,0,0.2);
+        }
+        .btn-custom:hover {
+            background: #fdd28c;
+            color: #2d1f0f;
+        }
+        .btn-custom:disabled {
+            opacity: 0.5;
+            transform: none;
+            box-shadow: 0 6px 0 #7b4d27;
+            pointer-events: none;
+        }
+        .money-box {
+            background: #1e5f3a;
+            color: #fee052;
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 10px 30px;
+            border-radius: 50px;
+            border: 4px solid #d9a413;
+            text-shadow: 2px 2px 0 #1a3a24;
+            margin: 10px 0;
+        }
+        .timer-box {
+            background: #1f3b2c;
+            color: white;
+            font-size: 2.5rem;
+            padding: 10px 40px;
+            border-radius: 60px;
+            border: 4px solid #e5b13b;
+        }
+        .grinder-area {
+            position: relative;
+            width: 100%;
+            height: 350px; /* Lebih luas */
+            background: #8bbf8c;
+            border-radius: 50px;
+            border: 5px solid #5b3e1f;
+            overflow: hidden;
+            margin: 10px 0;
+            background-image: radial-gradient(circle at 20% 30%, #5f924b, #3b6e2b);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2), 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .object {
+            position: absolute;
+            width: 90px;   /* Lebih besar */
+            height: 90px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+            filter: drop-shadow(3px 5px 3px #00000060);
+            transition: transform 0.1s;
+        }
+        .object:hover { transform: scale(1.1); }
+        .grass {
+            background-image: url('asset/du_rumput.png');
+        }
+        .bottle {
+            background-image: url('asset/du_botol.png');
+        }
+        .coin-animation {
+            position: absolute;
+            font-weight: bold;
+            color: #ffd966;
+            text-shadow: 2px 2px 0 #000;
+            font-size: 1.5rem;
+            pointer-events: none;
+            animation: floatUp 0.8s forwards;
+            z-index: 100;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+        .stats {
+            display: flex;
+            gap: 30px;
+            background: #5f3d22;
+            color: #ffd966;
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-height: 320px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #dbb88c;
+            border-radius: 40px;
+            border: 4px solid #9b6226;
+        }
+        .item-card {
+            background: #fffae6;
+            border: 3px solid #7b4d27;
+            border-radius: 30px;
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #5a3f21;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .item-card:active { transform: translateY(5px); box-shadow: none; }
+        .item-price { color: #1f8b4c; font-size: 1.2rem; }
+        .item-emoji { font-size: 2.5rem; }
+        .badge {
+            background: #5f3d22;
+            color: #ffd966;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+        }
+        .modal-content {
+            background: #fff2d7;
+            border: 6px solid #a56b3c;
+            border-radius: 60px;
+            box-shadow: 0 20px 30px #000000aa;
+            animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal-header, .modal-footer {
+            border: none;
+            justify-content: center;
+        }
+        .modal-body {
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        .status-message { 
+            background: #faf0cf; 
+            padding: 20px; 
+            border-radius: 40px; 
+            border: 3px solid #b57c48; 
+        }
+        input[type=number] { width: 200px; }
+        .summary-text { text-align: center; font-size: 1.2rem; line-height: 1.5; }
+        .narasi { 
+            font-size: 1rem; 
+            background: #e7d6b5; 
+            padding: 10px 20px; 
+            border-radius: 30px; 
+            margin-bottom: 10px; 
+            max-width: 90%; 
+        }
+        #backFromGrinderBtn {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .screen {
+            padding-bottom: 30px;
+        }
+        /* Tombol Mulai di pojok kiri bawah - UKURAN DIPERBESAR UNTUK ANAK-ANAK */
+        #grinderSplashStartBtn {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: #fdd28c;
+            border: 4px solid #9b6226;
+            border-radius: 60px;
+            color: #2d1f0f;
+            font-weight: bold;
+            font-size: 2.2rem;
+            padding: 18px 50px;
+            box-shadow: 0 8px 0 #7b4d27, 0 12px 20px rgba(0,0,0,0.4);
+            cursor: pointer;
+            transition: 0.05s linear;
+            z-index: 20;
+            letter-spacing: 2px;
+        }
+        #grinderSplashStartBtn:active {
+            transform: translateY(8px);
+            box-shadow: 0 0 0 #7b4d27, 0 5px 12px rgba(0,0,0,0.2);
+        }
+        /* Responsif untuk tablet dan mobile */
+        @media (max-width: 768px) {
+            .game-container {
+                height: 90vh;
+                max-height: 800px;
+            }
+            .btn-custom {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+            .money-box {
+                font-size: 1.5rem;
+                padding: 8px 20px;
+            }
+            .timer-box {
+                font-size: 2rem;
+                padding: 8px 30px;
+            }
+            .grinder-area {
+                height: 280px; /* tetap luas tapi menyesuaikan layar */
+            }
+            .object {
+                width: 70px;
+                height: 70px;
+            }
+            .shop-grid {
+                max-height: 250px;
+            }
+            .menu-card {
+                width: 90%;
+                padding: 15px 20px;
+            }
+            .menu-icon-img {
+                width: 45px;
+            }
+            .menu-text {
+                font-size: 1.5rem;
+            }
+            .welcome-message {
+                font-size: 1.4rem;
+            }
+            .new-player-btn {
+                top: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+            #grinderSplashStartBtn {
+                font-size: 1.8rem;
+                padding: 14px 40px;
+                bottom: 20px;
+                left: 20px;
+            }
+        }
+        @media (max-width: 480px) {
+            .game-container {
+                height: 95vh;
+            }
+            .btn-custom {
+                font-size: 0.9rem;
+                padding: 8px 15px;
+            }
+            .money-box {
+                font-size: 1.2rem;
+                padding: 5px 15px;
+            }
+            .stats {
+                gap: 15px;
+                font-size: 1rem;
+            }
+            .menu-card {
+                padding: 12px 16px;
+            }
+            .menu-icon-img {
+                width: 35px;
+            }
+            .menu-text {
+                font-size: 1.2rem;
+            }
+            .grinder-area {
+                height: 220px;
+            }
+            .object {
+                width: 60px;
+                height: 60px;
+            }
+            #grinderSplashStartBtn {
+                font-size: 1.5rem;
+                padding: 12px 30px;
+                bottom: 15px;
+                left: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container" id="gameContainer">
+    <!-- Modal Konfirmasi Beli -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmQuestion">Beli barang?</h5>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-custom" id="confirmYes">Ya</button>
+                    <button type="button" class="btn btn-custom" id="confirmNo" data-bs-dismiss="modal">Batal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Iuran (Level 3) -->
+    <div class="modal fade" id="iuranModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">🧹 Iuran Kebersihan</h5>
+                </div>
+                <div class="modal-body">
+                    <p id="iuranMessage">Bayar Rp10.000?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-custom" id="iuranOk" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Hasil Level (awal) -->
+    <div class="modal fade" id="resultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="resultTitle">Hasil Level</h5>
+                </div>
+                <div class="modal-body">
+                    <p id="resultMessage" class="status-message"></p>
+                </div>
+                <div class="modal-footer" id="resultButtons">
+                    <!-- akan diisi tombol -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Sedekah (dengan input) -->
+    <div class="modal fade" id="sedekahModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">💰 Sedekah</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Masukkan jumlah sedekah (maksimal <span id="maxSedekah"></span>):</p>
+                    <input type="number" id="sedekahInput" class="form-control" min="0" step="1000" value="0">
+                    <p class="mt-2" style="font-size:0.9rem; color:#555;">*Skor bertambah sebesar (jumlah sedekah / 1000).</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-custom" id="sedekahConfirm">Konfirmasi</button>
+                    <button type="button" class="btn btn-custom" id="sedekahCancel" data-bs-dismiss="modal">Batal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Menabung (dengan input) -->
+    <div class="modal fade" id="menabungModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">💰 Menabung</h5>
+                </div>
+                <div class="modal-body">
+                    <p>Masukkan jumlah uang yang ingin ditabung (maksimal <span id="maxMenabung"></span>):</p>
+                    <input type="number" id="menabungInput" class="form-control" min="0" step="1000" value="0">
+                    <p class="mt-2" style="font-size:0.9rem; color:#555;">*Uang yang tidak ditabung akan hangus. Tidak ada tambahan skor.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-custom" id="menabungConfirm">Konfirmasi</button>
+                    <button type="button" class="btn btn-custom" id="menabungCancel" data-bs-dismiss="modal">Batal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ringkasan Akhir -->
+    <div class="modal fade" id="summaryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">📊 Ringkasan Akhir</h5>
+                </div>
+                <div class="modal-body">
+                    <div id="summaryMessage" class="summary-text"></div>
+                    <p id="summaryScore" class="mt-3"></p>
+                    <p id="summaryMoney"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-custom" id="summaryOk" data-bs-dismiss="modal">Lanjut ke Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Hasil Grinder -->
+    <div class="modal fade" id="grinderResultModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">🎉 Selamat!</h5>
+                </div>
+                <div class="modal-body">
+                    <p id="grinderResultMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-custom" id="grinderResultOk" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU UTAMA -->
+    <div id="menuScreen" class="screen active">
+        <div id="newPlayerBtn" class="new-player-btn">🔄 Pemain Baru</div>
+        <div class="welcome-message" id="welcomeMessage">Halo, Pemain!</div>
+        <div class="money-box" id="menuMoney">Rp 0</div>
+        <div id="grinderCard" class="menu-card">
+            <img src="asset/koin.png" alt="Dapatkan Uang" class="menu-icon-img"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 60 60\'%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'28\' fill=\'%23fdd28c\' stroke=\'%239b6226\' stroke-width=\'2\'/%3E%3Ctext x=\'30\' y=\'38\' text-anchor=\'middle\' font-size=\'24\' fill=\'%239b6226\'%3E💰%3C/text%3E%3C/svg%3E';">
+            <div class="menu-text">Dapatkan Uang</div>
+        </div>
+        <div id="shopCard" class="menu-card">
+            <img src="asset/keranjang.png" alt="Belanja" class="menu-icon-img"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 60 60\'%3E%3Crect x=\'10\' y=\'20\' width=\'40\' height=\'30\' fill=\'%23fdd28c\' stroke=\'%239b6226\' stroke-width=\'2\'/%3E%3Ctext x=\'30\' y=\'38\' text-anchor=\'middle\' font-size=\'24\' fill=\'%239b6226\'%3E🛒%3C/text%3E%3C/svg%3E';">
+            <div class="menu-text">Belanja</div>
+        </div>
+        <div id="levelChoice" style="display: none; flex-direction: column; gap: 10px; width: 100%; align-items: center;">
+            <h3>Pilih Level Belanja:</h3>
+            <div class="d-flex gap-3">
+                <button class="btn btn-custom levelSelect" data-level="1">Level 1 (Bekal)</button>
+                <button class="btn btn-custom levelSelect" data-level="2" id="level2Btn">Level 2 (THR)</button>
+                <button class="btn btn-custom levelSelect" data-level="3" id="level3Btn">Level 3 (Festival)</button>
+            </div>
+            <button id="backFromLevelBtn" class="btn btn-custom">⬅ Kembali</button>
+        </div>
+    </div>
+
+    <!-- GRINDER SCREEN (hanya background + tombol Mulai pojok kiri bawah) -->
+    <div id="grinderScreen" class="screen">
+        <!-- Tombol Mulai splash (pojok kiri bawah) -->
+        <button id="grinderSplashStartBtn">Mulai</button>
+        <!-- Area permainan (awalnya tersembunyi) -->
+        <div id="grinderGameArea" style="display: none; width: 100%;">
+            <div class="timer-box" id="timerDisplay">30s</div>
+            <div class="money-box" id="grinderMoney">Rp 0</div>
+            <div class="stats">
+                <span>🌱 Rumput: <span id="grassCount">0</span></span>
+                <span>🍾 Botol: <span id="bottleCount">0</span></span>
+            </div>
+            <div class="grinder-area" id="grinderArea"></div>
+        </div>
+        <button id="backFromGrinderBtn" class="btn btn-custom" style="display: none; margin-top: 10px;">Selesai & Kembali</button>
+    </div>
+
+    <!-- BELANJA SCREEN -->
+    <div id="belanjaScreen" class="screen">
+        <div id="narasiLevel" class="narasi"></div>
+        <h2 id="levelTitle">Level Belanja</h2>
+        <div class="money-box" id="shopMoney">Rp 0</div>
+        <div id="shopItemsContainer" class="shop-grid"></div>
+        <div class="badge" id="inventoryBadge">📦 Inventory: 0 item</div>
+        <div class="d-flex gap-3">
+            <button id="finishShoppingBtn" class="btn btn-custom">✅ Selesai Belanja</button>
+            <button id="backFromShopBtn" class="btn btn-custom">⬅ Kembali</button>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ======================== AMBIL NAMA DARI URL ========================
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+    let playerName = getQueryParam('name');
+    if (!playerName) {
+        window.location.replace('index.html');
+    } else {
+        playerName = decodeURIComponent(playerName);
+    }
+
+    // ======================== GLOBAL STATE ========================
+    let currentMoney = 0;
+    let totalScore = 0;
+    let inventory = [];
+    let currentLevel = null;
+    let levelInitialMoney = 0;
+    let iuranPaid = false;
+    let purchaseCount = 0;
+    let iuranTriggered = false;
+    let level1Done = false;
+    let level2Done = false;
+    let lastLevelScore = 0;
+
+    let activeAudios = [];
+
+    const itemsData = {
+        1: [
+            { name: "Air Minum", price: 3000, type: "need", emoji: "💧" },
+            { name: "Sandwich", price: 5000, type: "need", emoji: "🥪" },
+            { name: "Marshmallow", price: 5000, type: "want", emoji: "🍡" },
+            { name: "Soda", price: 3000, type: "want", emoji: "🥤" }
+        ],
+        2: [
+            { name: "Buku", price: 20000, type: "need", emoji: "📚" },
+            { name: "Pensil", price: 3000, type: "need", emoji: "✏️" },
+            { name: "Penggaris", price: 5000, type: "need", emoji: "📏" },
+            { name: "Penghapus", price: 2000, type: "need", emoji: "🧽" },
+            { name: "Kotak Pensil", price: 15000, type: "need", emoji: "📦" },
+            { name: "Komik", price: 10000, type: "want", emoji: "📘" },
+            { name: "Hotwheels", price: 30000, type: "want", emoji: "🚗" },
+            { name: "Stiker", price: 5000, type: "want", emoji: "🏷️" },
+            { name: "Gelang", price: 10000, type: "want", emoji: "📿" },
+            { name: "Boneka", price: 30000, type: "want", emoji: "🧸" }
+        ],
+        3: [
+            { name: "Sepatu Std", price: 70000, type: "need", emoji: "👟" },
+            { name: "Botol Biasa", price: 15000, type: "need", emoji: "🧴" },
+            { name: "Kaos Polos", price: 30000, type: "need", emoji: "👕" },
+            { name: "Roti/Pisang", price: 10000, type: "need", emoji: "🍌" },
+            { name: "Sepatu Brand", price: 130000, type: "want", emoji: "👞" },
+            { name: "Botol Viral", price: 45000, type: "want", emoji: "🧊" },
+            { name: "Kaos Gold", price: 60000, type: "want", emoji: "✨" },
+            { name: "Snack Impor", price: 35000, type: "want", emoji: "🍫" }
+        ]
+    };
+
+    const narasi = {
+        1: `Bekal Harian: Pilih nutrisi terbaikmu!`,
+        2: `Berkah THR: Siapkan alat tulis naik kelas!`,
+        3: `Festival Sekolah: Pilih perlengkapan lomba!`
+    };
+
+    function playSound(freq = 500, duration = 0.1) {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.value = freq;
+            gainNode.gain.value = 0.1;
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
+        } catch (e) {}
+    }
+
+    function stopAllSounds() {
+        activeAudios.forEach(audio => {
+            if (audio && typeof audio.pause === 'function') {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        });
+        activeAudios = [];
+    }
+
+    function playAssetSound(filename) {
+        stopAllSounds();
+        try {
+            const audio = new Audio(`asset/${filename}`);
+            activeAudios.push(audio);
+            audio.play().catch(e => console.log('Audio gagal diputar:', e));
+            audio.onended = () => {
+                const index = activeAudios.indexOf(audio);
+                if (index > -1) activeAudios.splice(index, 1);
+            };
+        } catch (e) {
+            console.log('Audio tidak dapat dimainkan:', e);
+        }
+    }
+
+    // Fungsi untuk mengubah background body
+    function setBodyBackground(backgroundUrl) {
+        document.body.style.backgroundImage = `url('${backgroundUrl}')`;
+        document.body.style.backgroundColor = ''; // reset any solid color
+    }
+
+    function setSolidBackground(color) {
+        document.body.style.backgroundImage = 'none';
+        document.body.style.backgroundColor = color;
+    }
+
+    function switchScreen(screenId) {
+        stopAllSounds();
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        
+        // Ubah background sesuai screen
+        if (screenId === 'grinderScreen') {
+            setBodyBackground('asset/bg_dub2.gif');
+            // Reset tampilan grinder ke splash (hanya tombol mulai pojok kiri)
+            resetGrinderToSplash();
+        } else {
+            setBodyBackground('asset/bg_dub.gif');
+        }
+        
+        if (screenId === 'menuScreen') {
+            document.getElementById('menuMoney').innerText = `Rp ${currentMoney.toLocaleString()}`;
+            document.getElementById('welcomeMessage').innerText = `Halo, ${playerName}!`;
+        }
+    }
+
+    function showBSModal(modalId) {
+        stopAllSounds();
+        new bootstrap.Modal(document.getElementById(modalId)).show();
+    }
+
+    function hideBSModal(modalId) {
+        bootstrap.Modal.getInstance(document.getElementById(modalId))?.hide();
+    }
+
+    function initLevel(level) {
+        stopAllSounds();
+        currentLevel = level;
+        inventory = [];
+        iuranPaid = false;
+        purchaseCount = 0;
+        iuranTriggered = false;
+
+        let modalDasar = level === 1 ? 10000 : level === 2 ? 100000 : 150000;
+        currentMoney = modalDasar + currentMoney;
+        levelInitialMoney = currentMoney;
+
+        document.getElementById('narasiLevel').innerText = narasi[level];
+        playAssetSound(`narasi${level}.mp3`);
+        updateShopDisplay();
+    }
+
+    function updateShopDisplay() {
+        document.getElementById('shopMoney').innerText = `Rp ${currentMoney.toLocaleString()}`;
+        document.getElementById('inventoryBadge').innerText = `📦 Inventory: ${inventory.length} item`;
+        const container = document.getElementById('shopItemsContainer');
+        container.innerHTML = '';
+        if (!currentLevel) return;
+        itemsData[currentLevel].forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            card.innerHTML = `<div class="item-emoji">${item.emoji}</div><div>${item.name}</div><div class="item-price">Rp ${item.price.toLocaleString()}</div>`;
+            card.addEventListener('click', () => openConfirmPopup(item));
+            container.appendChild(card);
+        });
+    }
+
+    let selectedItem = null;
+    function openConfirmPopup(item) {
+        stopAllSounds();
+        selectedItem = item;
+        document.getElementById('confirmMessage').innerText = `Beli ${item.name} seharga Rp ${item.price.toLocaleString()}?`;
+        showBSModal('confirmModal');
+    }
+
+    document.getElementById('confirmYes').addEventListener('click', () => {
+        if (!selectedItem) return;
+        if (currentMoney >= selectedItem.price) {
+            currentMoney -= selectedItem.price;
+            inventory.push(selectedItem.name);
+            purchaseCount++;
+            playSound(600, 0.1);
+            if (currentLevel === 3 && !iuranTriggered && purchaseCount >= 2) triggerIuran();
+            updateShopDisplay();
+        } else alert('Uang tidak cukup!');
+        hideBSModal('confirmModal');
+        selectedItem = null;
+    });
+
+    document.getElementById('confirmNo').addEventListener('click', () => {
+        hideBSModal('confirmModal');
+        selectedItem = null;
+    });
+
+    function triggerIuran() {
+        iuranTriggered = true;
+        if (currentMoney >= 10000) {
+            currentMoney -= 10000;
+            iuranPaid = true;
+            document.getElementById('iuranMessage').innerText = 'Iuran Rp10.000 berhasil dibayar.';
+            playSound(700, 0.2);
+            playAssetSound('iuran_berhasil.mp3');
+        } else {
+            iuranPaid = false;
+            document.getElementById('iuranMessage').innerText = 'Yah, uangmu tidak cukup untuk membayar uang kas.';
+            playSound(300, 0.3);
+            playAssetSound('iuran_gagal.mp3');
+        }
+        showBSModal('iuranModal');
+        updateShopDisplay();
+    }
+
+    document.getElementById('iuranOk').addEventListener('click', () => hideBSModal('iuranModal'));
+
+    function checkScoring() {
+        const needs = itemsData[currentLevel].filter(i => i.type === 'need').map(i => i.name);
+        const boughtNeeds = inventory.filter(n => itemsData[currentLevel].find(i => i.name === n)?.type === 'need');
+        if (!needs.every(n => inventory.includes(n))) {
+            return { success: false, score: 0, message: "Kebutuhan utamamu belum terpenuhi! Coba pikirkan kembali prioritasmu." };
+        }
+        let score = boughtNeeds.length * 50 + Math.floor(currentMoney / 1000);
+        if (currentLevel === 3 && !iuranPaid) score -= 30;
+        return { success: true, score, message: `Skor level ini: ${score}` };
+    }
+
+    document.getElementById('finishShoppingBtn').addEventListener('click', () => {
+        stopAllSounds();
+        const result = checkScoring();
+        if (!result.success) {
+            document.getElementById('resultTitle').innerText = '😵 GAGAL';
+            document.getElementById('resultMessage').innerText = result.message;
+            document.getElementById('resultButtons').innerHTML = `
+                <button id="retryLevelBtn" class="btn btn-custom">Ulangi Level</button>
+                <button id="backToMenuBtn" class="btn btn-custom">Kembali ke Menu</button>`;
+            showBSModal('resultModal');
+            playSound(400, 0.3);
+            playAssetSound('gagal.mp3');
+        } else {
+            lastLevelScore = result.score;
+            document.getElementById('resultTitle').innerText = '🎉 BERHASIL';
+            document.getElementById('resultMessage').innerHTML = result.message + '<br>Pilih aksi selanjutnya:';
+            document.getElementById('resultButtons').innerHTML = `
+                <button id="sedekahChoiceBtn" class="btn btn-custom">Sedekah</button>
+                <button id="menabungChoiceBtn" class="btn btn-custom">Menabung</button>`;
+            showBSModal('resultModal');
+            playSound(800, 0.2);
+            playAssetSound('berhasil.mp3');
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (e.target.id === 'retryLevelBtn') {
+            hideBSModal('resultModal');
+            currentMoney = levelInitialMoney;
+            inventory = [];
+            purchaseCount = iuranTriggered = iuranPaid = false;
+            updateShopDisplay();
+        } else if (e.target.id === 'backToMenuBtn') {
+            hideBSModal('resultModal');
+            switchScreen('menuScreen');
+        } else if (e.target.id === 'sedekahChoiceBtn') {
+            hideBSModal('resultModal');
+            document.getElementById('maxSedekah').innerText = `Rp ${currentMoney.toLocaleString()}`;
+            document.getElementById('sedekahInput').value = 0;
+            document.getElementById('sedekahInput').max = currentMoney;
+            showBSModal('sedekahModal');
+        } else if (e.target.id === 'menabungChoiceBtn') {
+            hideBSModal('resultModal');
+            document.getElementById('maxMenabung').innerText = `Rp ${currentMoney.toLocaleString()}`;
+            document.getElementById('menabungInput').value = 0;
+            document.getElementById('menabungInput').max = currentMoney;
+            showBSModal('menabungModal');
+        }
+    });
+
+    document.getElementById('sedekahConfirm').addEventListener('click', () => {
+        let jumlah = parseInt(document.getElementById('sedekahInput').value, 10) || 0;
+        if (jumlah > currentMoney) { alert('Jumlah melebihi uang!'); return; }
+        if (currentLevel === 1) level1Done = true;
+        if (currentLevel === 2) level2Done = true;
+        const bonus = Math.floor(jumlah / 1000);
+        totalScore += lastLevelScore + bonus;
+        currentMoney -= jumlah;
+        hideBSModal('sedekahModal');
+        playSound(900, 0.3);
+        playAssetSound('sedekah.mp3');
+        showSummary(totalScore, currentMoney);
+    });
+
+    document.getElementById('sedekahCancel').addEventListener('click', () => {
+        hideBSModal('sedekahModal');
+        switchScreen('menuScreen');
+    });
+
+    document.getElementById('menabungConfirm').addEventListener('click', () => {
+        let jumlah = parseInt(document.getElementById('menabungInput').value, 10) || 0;
+        if (jumlah > currentMoney) { alert('Jumlah melebihi uang!'); return; }
+        if (currentLevel === 1) level1Done = true;
+        if (currentLevel === 2) level2Done = true;
+        currentMoney = jumlah;
+        totalScore += lastLevelScore;
+        hideBSModal('menabungModal');
+        playSound(650, 0.15);
+        playAssetSound('menabung.mp3');
+        showSummary(totalScore, currentMoney);
+    });
+
+    document.getElementById('menabungCancel').addEventListener('click', () => {
+        hideBSModal('menabungModal');
+        switchScreen('menuScreen');
+    });
+
+    function showSummary(finalScore, finalMoney) {
+        let pesan = "";
+        const skorTinggi = finalScore > 150;
+        const uangBanyak = finalMoney > 75000;
+        if (!skorTinggi && !uangBanyak) pesan = "Semangat! Lain kali lebih hemat dan dermawan ya!";
+        else if (skorTinggi && !uangBanyak) pesan = "Wow, kamu dermawan! Terima kasih sudah berbagi.";
+        else if (!skorTinggi && uangBanyak) pesan = "Kamu pandai mengelola uang, tapi coba tingkatkan kedermawanan.";
+        else pesan = "Luar biasa! Kamu berhasil mengelola keuangan dengan bijak dan dermawan.";
+        document.getElementById('summaryMessage').innerText = pesan;
+        document.getElementById('summaryScore').innerText = `Total skor: ${finalScore}`;
+        document.getElementById('summaryMoney').innerText = `Sisa uang: Rp ${finalMoney.toLocaleString()}`;
+        showBSModal('summaryModal');
+        playAssetSound('ringkasan.mp3');
+    }
+
+    document.getElementById('summaryOk').addEventListener('click', () => {
+        hideBSModal('summaryModal');
+        switchScreen('menuScreen');
+    });
+
+    // ======================== GRINDER ========================
+    let grinderInterval, spawnInterval, timer = 30;
+    let grass = 0, bottle = 0, grinderEarn = 0;
+
+    // Reset ke tampilan splash (hanya tombol Mulai pojok kiri)
+    function resetGrinderToSplash() {
+        // Hentikan semua interval jika sedang berjalan
+        if (grinderInterval) clearInterval(grinderInterval);
+        if (spawnInterval) clearInterval(spawnInterval);
+        // Sembunyikan area permainan dan tombol kembali, tampilkan tombol splash
+        document.getElementById('grinderGameArea').style.display = 'none';
+        document.getElementById('backFromGrinderBtn').style.display = 'none';
+        document.getElementById('grinderSplashStartBtn').style.display = 'inline-block';
+        // Bersihkan area permainan
+        const area = document.getElementById('grinderArea');
+        if (area) area.innerHTML = '';
+        timer = 30;
+        grass = bottle = grinderEarn = 0;
+        document.getElementById('timerDisplay').innerText = '30s';
+        document.getElementById('grassCount').innerText = '0';
+        document.getElementById('bottleCount').innerText = '0';
+    }
+
+    // Memulai permainan grinder (dipanggil dari tombol splash)
+    function startGrinderGame() {
+        // Ubah background menjadi solid hitam agar fokus pada permainan
+        setSolidBackground('#000000');
+        
+        // Sembunyikan tombol splash, tampilkan area permainan dan tombol kembali
+        document.getElementById('grinderSplashStartBtn').style.display = 'none';
+        document.getElementById('grinderGameArea').style.display = 'block';
+        document.getElementById('backFromGrinderBtn').style.display = 'inline-block';
+        
+        // Reset state permainan
+        timer = 30;
+        grass = 0;
+        bottle = 0;
+        grinderEarn = 0;
+        document.getElementById('grinderMoney').innerText = `Rp ${currentMoney.toLocaleString()}`;
+        document.getElementById('timerDisplay').innerText = '30s';
+        document.getElementById('grassCount').innerText = '0';
+        document.getElementById('bottleCount').innerText = '0';
+        document.getElementById('grinderArea').innerHTML = '';
+        
+        // Mulai timer dan spawn objek
+        grinderInterval = setInterval(() => {
+            timer--;
+            document.getElementById('timerDisplay').innerText = timer + 's';
+            if (timer <= 0) endGrinder();
+        }, 1000);
+        spawnInterval = setInterval(() => { if (timer > 0) spawnObject(); }, 1000);
+        spawnObject(); // spawn pertama
+    }
+
+    function spawnObject() {
+        const area = document.getElementById('grinderArea');
+        const obj = document.createElement('div');
+        const type = Math.random() < 0.6 ? 'grass' : 'bottle';
+        obj.className = `object ${type}`;
+        const maxX = area.clientWidth - 90; // Lebar objek baru 90px
+        const maxY = area.clientHeight - 90;
+        if (maxX <= 0 || maxY <= 0) return;
+        obj.style.left = Math.random() * maxX + 'px';
+        obj.style.top = Math.random() * maxY + 'px';
+        obj.addEventListener('click', (e) => {
+            e.stopPropagation();
+            let value = type === 'grass' ? 500 : 1000;
+            currentMoney += value;
+            grinderEarn += value;
+            if (type === 'grass') grass++; else bottle++;
+            document.getElementById('grinderMoney').innerText = `Rp ${currentMoney.toLocaleString()}`;
+            document.getElementById('grassCount').innerText = grass;
+            document.getElementById('bottleCount').innerText = bottle;
+            playSound(type === 'grass' ? 550 : 660, 0.1);
+            const coin = document.createElement('div');
+            coin.className = 'coin-animation';
+            coin.innerText = `+Rp ${value}`;
+            const rect = area.getBoundingClientRect();
+            coin.style.left = (e.clientX - rect.left) + 'px';
+            coin.style.top = (e.clientY - rect.top) + 'px';
+            area.appendChild(coin);
+            setTimeout(() => coin.remove(), 800);
+            obj.remove();
+        });
+        area.appendChild(obj);
+    }
+
+    function endGrinder() {
+        clearInterval(grinderInterval);
+        clearInterval(spawnInterval);
+        document.getElementById('grinderArea').innerHTML = '';
+        let msg = `Kamu berhasil mencabut ${grass} rumput (Rp ${grass*500}) dan mengumpulkan ${bottle} botol (Rp ${bottle*1000}). Total tambahan: Rp ${grinderEarn}. Wah kamu berhasil menghasilkan uang sendiri. Yuk kita mulai berbelanja kebutuhanmu!`;
+        document.getElementById('grinderResultMessage').innerHTML = msg.replace(/\. /g, '.<br>');
+        showBSModal('grinderResultModal');
+        playSound(1000, 0.2);
+        playAssetSound('grinder_selesai.mp3');
+    }
+
+    // Event listener untuk tombol splash
+    document.getElementById('grinderSplashStartBtn').addEventListener('click', startGrinderGame);
+
+    document.getElementById('grinderResultOk').addEventListener('click', () => {
+        hideBSModal('grinderResultModal');
+        // Kembali ke menu utama, reset tampilan grinder
+        switchScreen('menuScreen');
+        document.getElementById('menuMoney').innerText = `Rp ${currentMoney.toLocaleString()}`;
+    });
+
+    document.getElementById('backFromGrinderBtn').addEventListener('click', () => {
+        clearInterval(grinderInterval);
+        clearInterval(spawnInterval);
+        endGrinder();
+    });
+
+    // ======================== EVENT LISTENER UNTUK MENU ========================
+    document.getElementById('grinderCard').addEventListener('click', () => {
+        stopAllSounds();
+        // Tidak ada suara narasi lagi
+        switchScreen('grinderScreen');
+    });
+
+    document.getElementById('shopCard').addEventListener('click', () => {
+        stopAllSounds();
+        document.getElementById('grinderCard').style.display = 'none';
+        document.getElementById('shopCard').style.display = 'none';
+        document.getElementById('levelChoice').style.display = 'flex';
+        document.getElementById('level2Btn').disabled = !level1Done;
+        document.getElementById('level3Btn').disabled = !level2Done;
+    });
+
+    document.getElementById('backFromLevelBtn').addEventListener('click', () => {
+        stopAllSounds();
+        document.getElementById('levelChoice').style.display = 'none';
+        document.getElementById('grinderCard').style.display = 'flex';
+        document.getElementById('shopCard').style.display = 'flex';
+    });
+
+    document.querySelectorAll('.levelSelect').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            stopAllSounds();
+            const level = parseInt(e.target.dataset.level);
+            if (level === 2 && !level1Done) {
+                alert('Selesaikan Level 1 terlebih dahulu!');
+                return;
+            }
+            if (level === 3 && !level2Done) {
+                alert('Selesaikan Level 2 terlebih dahulu!');
+                return;
+            }
+            initLevel(level);
+            switchScreen('belanjaScreen');
+            document.getElementById('levelTitle').innerText = `Level ${level} - ${level === 1 ? 'Bekal Harian' : level === 2 ? 'Berkah THR' : 'Festival Sekolah'}`;
+            document.getElementById('levelChoice').style.display = 'none';
+            document.getElementById('grinderCard').style.display = 'flex';
+            document.getElementById('shopCard').style.display = 'flex';
+        });
+    });
+
+    document.getElementById('backFromShopBtn').addEventListener('click', () => {
+        stopAllSounds();
+        switchScreen('menuScreen');
+        document.getElementById('menuMoney').innerText = `Rp ${currentMoney.toLocaleString()}`;
+        document.getElementById('grinderCard').style.display = 'flex';
+        document.getElementById('shopCard').style.display = 'flex';
+        document.getElementById('levelChoice').style.display = 'none';
+    });
+
+    document.getElementById('newPlayerBtn').addEventListener('click', () => {
+        stopAllSounds();
+        window.location.href = 'index.html';
+    });
+
+    // Inisialisasi background awal
+    setBodyBackground('asset/bg_dub.gif');
+    document.getElementById('menuMoney').innerText = `Rp ${currentMoney.toLocaleString()}`;
+    document.getElementById('welcomeMessage').innerText = `Halo, ${playerName}!`;
+</script>
+</body>
+</html>
