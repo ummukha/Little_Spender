@@ -17,7 +17,6 @@
             align-items: center;
             font-family: 'Segoe UI', Roboto, sans-serif;
         }
-        /* Overlay untuk menampilkan GIF pembuka */
         .splash-overlay {
             position: fixed;
             top: 0;
@@ -56,7 +55,6 @@
             z-index: 1001;
             pointer-events: none;
         }
-        /* Konten utama (form) yang muncul setelah splash */
         .main-content {
             display: none;
             width: 100%;
@@ -122,97 +120,59 @@
             background: #fdd28c;
             color: #2d1f0f;
         }
-        /* Responsif */
         @media (max-width: 768px) {
-            .logo {
-                max-width: 220px;
-                margin-bottom: 25px;
-            }
-            .input-name {
-                max-width: 280px;
-                font-size: 1rem;
-                padding: 12px 16px;
-            }
-            .btn-main {
-                font-size: 1.2rem;
-                padding: 12px 30px;
-                margin-top: 15px;
-            }
+            .logo { max-width: 220px; margin-bottom: 25px; }
+            .input-name { max-width: 280px; font-size: 1rem; padding: 12px 16px; }
+            .btn-main { font-size: 1.2rem; padding: 12px 30px; margin-top: 15px; }
         }
         @media (max-width: 480px) {
-            .logo {
-                max-width: 180px;
-                margin-bottom: 20px;
-            }
-            .input-name {
-                max-width: 240px;
-                padding: 10px 12px;
-            }
-            .btn-main {
-                font-size: 1rem;
-                padding: 10px 25px;
-                margin-top: 12px;
-            }
+            .logo { max-width: 180px; margin-bottom: 20px; }
+            .input-name { max-width: 240px; padding: 10px 12px; }
+            .btn-main { font-size: 1rem; padding: 10px 25px; margin-top: 12px; }
         }
     </style>
 </head>
 <body>
-    <!-- Overlay untuk splash GIF -->
     <div id="splashOverlay" class="splash-overlay">
         <img id="opening1" src="asset/opening1.gif" alt="Opening 1">
         <img id="opening2" src="asset/opening2.gif" alt="Opening 2">
         <div class="skip-hint">⚡ Klik untuk skip</div>
     </div>
-
-    <!-- Konten utama setelah splash -->
     <div id="mainContent" class="main-content">
         <img src="asset/logo.png" alt="Little Spender Logo" class="logo" 
              onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'200\' viewBox=\'0 0 300 200\'%3E%3Crect width=\'300\' height=\'200\' fill=\'%23fdd28c\'/%3E%3Ctext x=\'50\' y=\'120\' font-size=\'30\' fill=\'%239b6226\'%3ELittle Spender%3C/text%3E%3C/svg%3E';">
         <input type="text" id="playerName" class="input-name" placeholder="Masukkan nama kamu" maxlength="20" value="">
         <button id="playBtn" class="btn-main">Mainkan</button>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const opening1 = document.getElementById('opening1');
             const opening2 = document.getElementById('opening2');
             const splashOverlay = document.getElementById('splashOverlay');
             const mainContent = document.getElementById('mainContent');
-
             let timeout1;
-
             function finishSplash() {
                 if (timeout1) clearTimeout(timeout1);
                 splashOverlay.style.display = 'none';
                 mainContent.style.display = 'flex';
                 document.body.style.background = 'none';
             }
-
-            // Tampilkan opening1 selama 3 detik
             opening1.classList.add('active');
             timeout1 = setTimeout(() => {
                 opening1.classList.remove('active');
                 opening2.classList.add('active');
-                // Tidak ada timeout lagi – user harus klik untuk melanjutkan
             }, 3000);
-
-            // Klik pada overlay akan langsung menyelesaikan splash
             splashOverlay.addEventListener('click', function(e) {
                 finishSplash();
             });
-
-            // Jika opening1 gagal dimuat, langsung tampilkan opening2 dan tunggu klik
             opening1.onerror = () => {
                 if (timeout1) clearTimeout(timeout1);
                 opening1.classList.remove('active');
                 opening2.classList.add('active');
             };
-            // Jika opening2 gagal dimuat, langsung selesaikan splash
             opening2.onerror = () => {
                 finishSplash();
             };
-
-            // Tombol mainkan
             document.getElementById('playBtn').addEventListener('click', function() {
                 let name = document.getElementById('playerName').value.trim();
                 if (name === '') name = 'Spender';
